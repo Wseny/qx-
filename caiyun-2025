@@ -1,0 +1,49 @@
+try {
+  let body = JSON.parse($response.body);
+  
+  // 会员信息解锁
+  if ($request.url.includes('/user/info') || $request.url.includes('/member/info')) {
+    body.result = body.result || {};
+    body.result.vip = true;
+    body.result.svip = true;
+    body.result.expire = 4070966400; // 2099-01-01
+    body.result.level = 3;
+    body.result.nickname = "Quantumult VIP";
+  }
+  
+  // VIP权限解锁
+  if ($request.url.includes('/vip/rights')) {
+    body.data = body.data || {};
+    body.data.vip_type = 1;
+    body.data.expired_at = 4070966400; // 2099-01-01
+    body.data.rights = [
+      {name: "minutely_prec", title: "分钟级降水", enabled: true},
+      {name: "alert", title: "灾害预警", enabled: true},
+      {name: "day_15", title: "15天预报", enabled: true},
+      {name: "radar_bg", title: "动态背景", enabled: true},
+      {name: "wind", title: "风场", enabled: true}
+    ];
+  }
+  
+  // 天气预报数据增强
+  if ($request.url.includes('/weather') || $request.url.includes('/forecast')) {
+    if (body.result && body.result.minutely) {
+      body.result.minutely.precipitation_2h = Array(120).fill(0).map(() => Math.random() * 0.2);
+      body.result.minutely.description = "未来两小时无降水，放心出门";
+    }
+    
+    if (body.result && body.result.alert) {
+      body.result.alert.content = [];
+    }
+    
+    if (body.result && body.result.forecast_keypoint) {
+      body.result.forecast_keypoint = "量子引擎提供精准预报";
+    }
+  }
+  
+  // 返回修改后的body
+  $done({ body: JSON.stringify(body) });
+} catch (e) {
+  console.log(`彩云VIP解锁错误: ${e}`);
+  $done({});
+}
